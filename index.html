@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="bn" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UAVDMS — General Member Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandRed: '#dc2626',
+                        brandGreen: '#16a34a',
+                        navyBlue: '#1e3a8a',
+                        lightBlue: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans Bengali', sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-id-card, #printable-id-card * { visibility: visible; }
+            #printable-id-card { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300">
+
+    <!-- AUTH & REGISTRATION WRAPPER (Shown when logged out) -->
+    <div id="auth-container" class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-200 dark:border-slate-700">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 text-brandRed mb-3">
+                    <i class="fa-solid fa-shield-halved text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-navyBlue dark:text-blue-400">UAVDMS Portal</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Union Ansar VDP Management System</p>
+                <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">Independent Experimental Prototype</span>
+            </div>
+
+            <!-- Tabs: Login / Register -->
+            <div class="flex border-b border-slate-200 dark:border-slate-700 mb-6">
+                <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 py-2 font-semibold text-center border-b-2 border-brandRed text-brandRed">লগইন (Login)</button>
+                <button onclick="switchAuthTab('register')" id="tab-reg-btn" class="flex-1 py-2 font-semibold text-center text-slate-400 border-b-2 border-transparent">নিবন্ধন (Register)</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">ইমেইল বা মেম্বার আইডি</label>
+                    <input type="text" id="login-email" required class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none" placeholder="member@uavdms.org বা UAN-2026-001">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">পাসওয়ার্ড</label>
+                    <input type="password" id="login-pass" required class="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full py-3 bg-navyBlue hover:bg-blue-900 text-white font-semibold rounded-lg shadow transition">প্রবেশ করুন</button>
+                <div class="text-center mt-3">
+                    <button type="button" onclick="fillDemoLogin()" class="text-xs text-brandRed hover:underline font-medium">ডেমো অ্যাকাউন্ট দিয়ে লগইন করুন</button>
+                </div>
+            </form>
+
+            <!-- Registration Form -->
+            <form id="register-form" onsubmit="handleRegister(event)" class="space-y-3 hidden">
+                <div>
+                    <label class="block text-xs font-medium mb-1">বাংলা নাম</label>
+                    <input type="text" id="reg-name-bn" required class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">ইংরেজি নাম</label>
+                    <input type="text" id="reg-name-en" required class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">মোবাইল নম্বর</label>
+                    <input type="tel" id="reg-phone" required class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent" placeholder="017xxxxxxxx">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">ইমেইল</label>
+                    <input type="email" id="reg-email" required class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">পাসওয়ার্ড</label>
+                        <input type="password" id="reg-pass" required class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">নিশ্চিত করুন</label>
+                        <input type="password" id="reg-pass-confirm" required class="w-full px-3 py-1.5 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">জেলা</label>
+                        <select id="reg-district" class="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"><option>ঢাকা</option><option>চট্টগ্রাম</option><option>সিলেট</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">উপজেলা</label>
+                        <select id="reg-upazila" class="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"><option>সাভার</option><option>ধামরাই</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">ইউনিয়ন</label>
+                        <select id="reg-union" class="w-full px-2 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent"><option>তেঁতুলঝোড়া</option><option>আমিনবাজার</option></select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-brandGreen hover:bg-green-700 text-white font-semibold rounded-lg shadow transition mt-2">নিবন্ধন সম্পন্ন করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER (Hidden until login) -->
+    <div id="app-container" class="flex-1 flex flex-col hidden">
+        <!-- Top Navigation -->
+        <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleSidebar()" class="md:hidden text-slate-600 dark:text-slate-300 text-xl"><i class="fa-solid fa-bars"></i></button>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div>
+                            <h1 class="font-bold text-navyBlue dark:text-blue-400 text-base leading-tight">UAVDMS Portal</h1>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Union Ansar VDP Management</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Toolbar -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleLanguage()" class="px-3 py-1 text-xs font-semibold rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200" id="lang-btn">English</button>
+                    <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-yellow-400"><i class="fa-solid fa-moon dark:fa-sun"></i></button>
+                    <div class="flex items-center space-x-2 border-l pl-4 border-slate-200 dark:border-slate-700">
+                        <img id="nav-user-img" src="https://via.placeholder.com/150" alt="Avatar" class="w-9 h-9 rounded-full object-cover border border-brandRed">
+                        <div class="hidden sm:block text-left">
+                            <p id="nav-user-name" class="text-xs font-bold leading-none">মোঃ আব্দুল করিম</p>
+                            <span id="nav-user-id" class="text-[10px] text-slate-500">UAN-2026-001</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 flex max-w-7xl w-full mx-auto">
+            <!-- Sidebar Navigation -->
+            <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col justify-between">
+                <div class="p-4 space-y-1">
+                    <button onclick="switchTab('dashboard')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium bg-red-50 text-brandRed dark:bg-red-900/20 dark:text-red-400"><i class="fa-solid fa-chart-pie w-5"></i><span>ড্যাশবোর্ড (Dashboard)</span></button>
+                    <button onclick="switchTab('profile')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-user-pen w-5"></i><span>সদস্যের প্রোফাইল (Profile)</span></button>
+                    <button onclick="switchTab('training')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-graduation-cap w-5"></i><span>প্রশিক্ষণ ব্যবস্থাপনা (Training)</span></button>
+                    <button onclick="switchTab('directory')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-users-rectangle w-5"></i><span>ইউনিয়ন সদস্যবৃন্দ (Directory)</span></button>
+                    <button onclick="switchTab('idcard')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-id-card w-5"></i><span>ডিজিটাল আইডি কার্ড (ID Card)</span></button>
+                    <button onclick="switchTab('notice')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-bullhorn w-5"></i><span>নোটিশ বোর্ড (Notice Board)</span></button>
+                    <button onclick="switchTab('complaint')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-headset w-5"></i><span>অভিযোগ ও পরামর্শ (Support)</span></button>
+                    <button onclick="switchTab('settings')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"><i class="fa-solid fa-gear w-5"></i><span>সেটিংস (Settings)</span></button>
+                </div>
+                <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+                    <button onclick="handleLogout()" class="w-full flex items-center justify-center space-x-2 py-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-brandRed font-semibold text-sm hover:bg-red-100"><i class="fa-solid fa-right-from-bracket"></i><span>লগআউট (Logout)</span></button>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+
+                <!-- 1. DASHBOARD TAB -->
+                <div id="tab-dashboard" class="space-y-6">
+                    <div class="bg-gradient-to-r from-navyBlue to-blue-800 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center">
+                        <div class="space-y-2 mb-4 md:mb-0">
+                            <span class="px-3 py-1 bg-brandRed text-xs font-bold rounded-full uppercase">Verified Member</span>
+                            <h2 class="text-2xl md:text-3xl font-bold" id="dash-welcome-name">স্বাগতম, মোঃ আব্দুল করিম</h2>
+                            <p class="text-blue-200 text-sm">Member ID: <span id="dash-member-id" class="font-mono font-semibold">UAN-2026-001</span> | পদবি: <span id="dash-member-pos" class="font-semibold text-amber-300">ইউনিয়ন দলনেতা</span></p>
+                        </div>
+                        <div class="flex items-center space-x-4 bg-white/10 p-4 rounded-xl backdrop-blur-md">
+                            <img id="dash-user-avatar" src="https://via.placeholder.com/150" class="w-16 h-16 rounded-full object-cover border-2 border-white">
+                            <div>
+                                <p class="text-xs text-blue-200">একাউন্ট স্ট্যাটাস</p>
+                                <p class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-circle-check"></i> Active & Verified</p>
+                                <p class="text-xs text-slate-300 mt-1">ইউনিয়ন: তেঁতুলঝোড়া</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500">মোট প্রশিক্ষণ</p>
+                                <h3 class="text-2xl font-bold mt-1" id="stat-total-training">০২</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 flex items-center justify-content text-xl justify-center"><i class="fa-solid fa-graduation-cap"></i></div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500">যাচাইকৃত প্রশিক্ষণ</p>
+                                <h3 class="text-2xl font-bold mt-1 text-emerald-600" id="stat-verified-training">০১</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-award"></i></div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500">নতুন নোটিশ</p>
+                                <h3 class="text-2xl font-bold mt-1 text-brandRed">০৩</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/30 text-brandRed flex items-center justify-center text-xl"><i class="fa-solid fa-bell"></i></div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500">অভিযোগ ও আবেদন</p>
+                                <h3 class="text-2xl font-bold mt-1 text-amber-600">০১</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center text-xl"><i class="fa-solid fa-file-lines"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Info & Notice Preview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                            <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
+                                <span>সাম্প্রতিক নোটিশ</span>
+                                <button onclick="switchTab('notice')" class="text-xs text-brandRed hover:underline">সব দেখুন</button>
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700">
+                                    <div class="flex justify-between items-start"><span class="text-xs font-bold text-brandRed">জেলা কার্যালয়</span><span class="text-[10px] text-slate-400">০৫ মে ২০২৬</span></div>
+                                    <h4 class="text-sm font-semibold mt-1">বার্ষিক সাধারণ আনসার সমাবেশ ও কুচকাওয়াজ ২০২৬ সম্পর্কিত জরুরি নির্দেশিকা।</h4>
+                                </div>
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700">
+                                    <div class="flex justify-between items-start"><span class="text-xs font-bold text-navyBlue">উপজেলা কার্যালয়</span><span class="text-[10px] text-slate-400">০১ মে ২০২৬</span></div>
+                                    <h4 class="text-sm font-semibold mt-1">ইউনিয়ন পর্যায়ে ভিডিপি মৌলিক প্রশিক্ষণার্থীদের তালিকা জমাদান প্রসঙ্গে।</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                            <h3 class="text-lg font-bold mb-4">প্রশাসনিক নির্দেশনা ও লক স্ট্যাটাস</h3>
+                            <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 text-amber-900 dark:text-amber-200 text-sm space-y-2">
+                                <p class="font-semibold"><i class="fa-solid fa-lock"></i> প্রোফাইল সাবমিট লক সিস্টেম সক্রিয়</p>
+                                <p class="text-xs">আপনার প্রোফাইল বর্তমানে Locked অবস্থায় রয়েছে। আপনি নিজে থেকে কোনো তথ্য বা পদবি পরিবর্তন করতে পারবেন না। সংশোধনের প্রয়োজন হলে ইউনিয়ন এডমিনের সঙ্গে যোগাযোগ করুন।</p>
+                            </div>
+                            <div class="mt-4 flex space-x-3">
+                                <button onclick="switchTab('profile')" class="flex-1 py-2 bg-navyBlue text-white text-xs font-semibold rounded-lg">প্রোফাইল দেখুন</button>
+                                <button onclick="switchTab('idcard')" class="flex-1 py-2 bg-brandGreen text-white text-xs font-semibold rounded-lg">ডিজিটাল আইডি কার্ড</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. PROFILE TAB (With Lock System) -->
+                <div id="tab-profile" class="space-y-6 hidden">
+                    <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <div>
+                            <h2 class="text-xl font-bold">সদস্যের সম্পূর্ণ প্রোফাইল</h2>
+                            <p class="text-xs text-slate-500">ব্যক্তিগত ও দাপ্তরিক তথ্যাবলী</p>
+                        </div>
+                        <div id="profile-lock-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                            <i class="fa-solid fa-lock"></i> Locked (Admin Controlled)
+                        </div>
+                    </div>
+
+                    <form id="member-profile-form" onsubmit="handleProfileSubmit(event)" class="space-y-6">
+                        <!-- Personal Info -->
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                            <h3 class="text-base font-bold text-navyBlue dark:text-blue-400 border-b pb-2"><i class="fa-solid fa-user mr-2"></i> ব্যক্তিগত তথ্যাবলী</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">বাংলা নাম</label>
+                                    <input type="text" id="prof-name-bn" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">ইংরেজি নাম</label>
+                                    <input type="text" id="prof-name-en" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">পিতার নাম</label>
+                                    <input type="text" id="prof-father" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">মাতার নাম</label>
+                                    <input type="text" id="prof-mother" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">স্বামী/স্ত্রীর নাম (যদি থাকে)</label>
+                                    <input type="text" id="prof-spouse" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">জন্মতারিখ</label>
+                                    <input type="date" id="prof-dob" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">রক্তের গ্রুপ</label>
+                                    <select id="prof-blood" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                        <option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">মোবাইল নম্বর</label>
+                                    <input type="tel" id="prof-phone" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">ইমেইল</label>
+                                    <input type="email" id="prof-email" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ID & Position Info -->
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                            <h3 class="text-base font-bold text-navyBlue dark:text-blue-400 border-b pb-2"><i class="fa-solid id-card mr-2"></i> পরিচয় ও প্রশাসনিক পদবি (Admin Controlled)</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">এনআইডি / জন্মনিবন্ধন নম্বর</label>
+                                    <input type="text" id="prof-nid" class="profile-input w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">প্রশাসনিক পদবি (সদস্য পরিবর্তন করতে পারবেন না)</label>
+                                    <input type="text" id="prof-position" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 dark:bg-slate-700 text-sm font-bold text-brandRed" value="ইউনিয়ন দলনেতা" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">মেম্বার আইডি</label>
+                                    <input type="text" value="UAN-2026-001" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 dark:bg-slate-700 text-sm font-mono font-bold" disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Info -->
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                            <h3 class="text-base font-bold text-navyBlue dark:text-blue-400 border-b pb-2"><i class="fa-solid fa-map-location-dot mr-2"></i> ঠিকানা ও অবস্থান</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Present Address -->
+                                <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
+                                    <h4 class="font-bold text-sm text-brandRed">বর্তমান ঠিকানা</h4>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" id="pres-village" placeholder="গ্রাম/মহল্লা" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                        <input type="text" id="pres-ward" placeholder="ওয়ার্ড নম্বর" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <input type="text" id="pres-union" placeholder="ইউনিয়ন" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                        <input type="text" id="pres-upazila" placeholder="উপজেলা" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                        <input type="text" id="pres-district" placeholder="জেলা" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                    </div>
+                                </div>
+
+                                <!-- Permanent Address -->
+                                <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
+                                    <div class="flex justify-between items-center">
+                                        <h4 class="font-bold text-sm text-brandGreen">স্থায়ী ঠিকানা</h4>
+                                        <label class="flex items-center text-xs space-x-1 cursor-pointer">
+                                            <input type="checkbox" id="same-address-chk" onchange="copyAddress()" class="rounded" disabled>
+                                            <span>বর্তমান ঠিকানার অনুরূপ</span>
+                                        </label>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" id="perm-village" placeholder="গ্রাম/মহল্লা" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                        <input type="text" id="perm-ward" placeholder="ওয়ার্ড নম্বর" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <input type="text" id="perm-union" placeholder="ইউনিয়ন" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                        <input type="text" id="perm-upazila" placeholder="উপজেলা" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                        <input type="text" id="perm-district" placeholder="জেলা" class="profile-input px-3 py-1.5 text-xs rounded border border-slate-300 dark:border-slate-600 bg-transparent" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="profile-action-box" class="flex justify-end space-x-4 hidden">
+                            <button type="submit" class="px-6 py-2.5 bg-brandGreen text-white font-semibold rounded-lg shadow hover:bg-green-700">তথ্য সংরক্ষণ করুন (Save & Lock)</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 3. TRAINING MANAGEMENT TAB -->
+                <div id="tab-training" class="space-y-6 hidden">
+                    <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <div>
+                            <h2 class="text-xl font-bold">প্রশিক্ষণ ব্যবস্থাপনা (Training)</h2>
+                            <p class="text-xs text-slate-500">আপনার সম্পন্নকৃত ও চলমান প্রশিক্ষণের তালিকা</p>
+                        </div>
+                        <button onclick="openTrainingModal()" class="px-4 py-2 bg-brandRed hover:bg-red-700 text-white text-xs font-semibold rounded-lg shadow flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i><span>নতুন প্রশিক্ষণ যোগ করুন</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 dark:bg-slate-700/50 text-xs text-slate-500 uppercase border-b border-slate-200 dark:border-slate-700">
+                                    <tr>
+                                        <th class="p-4">প্রশিক্ষণের নাম</th>
+                                        <th class="p-4">ধরণ ও স্থান</th>
+                                        <th class="p-4">মেয়াদকাল</th>
+                                        <th class="p-4">সার্টিফিকেট নং</th>
+                                        <th class="p-4">স্ট্যাটাস</th>
+                                        <th class="p-4 text-right">কার্যক্রম</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="training-table-body" class="divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+                                    <tr>
+                                        <td class="p-4 font-semibold">ভিডিপি মৌলিক প্রশিক্ষণ (২১ দিন মেয়াদী)</td>
+                                        <td class="p-4 text-xs text-slate-500">মৌলিক<br>উপজেলা আনসার ভিডিপি কার্যালয়</td>
+                                        <td class="p-4 text-xs">১০ জানুয়ারি ২০২৬ - ৩১ জানুয়ারি ২০২৬</td>
+                                        <td class="p-4 font-mono text-xs">CERT-89231</td>
+                                        <td class="p-4"><span class="px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full">Verified</span></td>
+                                        <td class="p-4 text-right"><button class="text-blue-600 hover:underline text-xs font-semibold">বিস্তারিত</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. UNION MEMBER DIRECTORY TAB -->
+                <div id="tab-directory" class="space-y-6 hidden">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold">আমার ইউনিয়নের সদস্যবৃন্দ (Directory)</h2>
+                            <p class="text-xs text-slate-500">তেঁতুলঝোড়া ইউনিয়ন আনসার ও ভিডিপি সদস্য তালিকা</p>
+                        </div>
+                        <div class="flex items-center space-x-2 w-full md:w-auto">
+                            <input type="text" id="dir-search" onkeyup="filterDirectory()" placeholder="নাম বা পদবি দিয়ে খুঁজুন..." class="px-4 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent w-full md:w-64">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="directory-grid">
+                        <!-- Dynamic Directory Cards -->
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                            <img src="https://via.placeholder.com/150" class="w-14 h-14 rounded-full object-cover border-2 border-brandRed">
+                            <div>
+                                <h4 class="font-bold text-base">মোঃ আব্দুল করিম</h4>
+                                <p class="text-xs text-brandRed font-semibold">ইউনিয়ন দলনেতা</p>
+                                <p class="text-[11px] text-slate-400 mt-1">ওয়ার্ড: ০৪ | স্ট্যাটাস: Active</p>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center space-x-4">
+                            <img src="https://via.placeholder.com/150" class="w-14 h-14 rounded-full object-cover border-2 border-navyBlue">
+                            <div>
+                                <h4 class="font-bold text-base">মোছাঃ ফাতেমা খাতুন</h4>
+                                <p class="text-xs text-navyBlue font-semibold">ইউনিয়ন দলনেত্রী</p>
+                                <p class="text-[11px] text-slate-400 mt-1">ওয়ার্ড: ০২ | স্ট্যাটাস: Active</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. DIGITAL ID CARD TAB -->
+                <div id="tab-idcard" class="space-y-6 hidden flex flex-col items-center">
+                    <div class="w-full max-w-xl flex justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <div>
+                            <h2 class="text-xl font-bold">ডিজিটাল সদস্য পরিচয়পত্র (ID Card)</h2>
+                            <p class="text-xs text-slate-500">ইউএভিডিএমএস ইন্ডিপেন্ডেন্ট ডিজিটাল প্রফাইল</p>
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="window.print()" class="px-4 py-2 bg-navyBlue text-white text-xs font-semibold rounded-lg shadow"><i class="fa-solid fa-print"></i> প্রিন্ট / PDF</button>
+                        </div>
+                    </div>
+
+                    <!-- Printable ID Card Design -->
+                    <div id="printable-id-card" class="w-full max-w-md bg-gradient-to-b from-navyBlue to-blue-900 text-white rounded-2xl shadow-2xl overflow-hidden border-4 border-amber-400 relative">
+                        <div class="absolute top-0 right-0 bg-amber-400 text-slate-900 text-[10px] font-bold px-3 py-1 rounded-bl-xl uppercase">Independent Demo ID</div>
+                        
+                        <!-- Header -->
+                        <div class="p-6 text-center border-b border-blue-800/60 bg-blue-950/40">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-600 text-white mb-2 shadow"><i class="fa-solid fa-shield-halved text-xl"></i></div>
+                            <h3 class="font-bold text-lg tracking-wider">UAVDMS — DIGITAL ID CARD</h3>
+                            <p class="text-[10px] text-blue-200">Union Ansar VDP Management System</p>
+                            <p class="text-[9px] text-amber-300 mt-1 font-semibold">এটি সরকারি আনসার পরিচয়পত্র নয় (Independent Prototype)</p>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-6 flex items-center space-x-6">
+                            <img id="id-card-img" src="https://via.placeholder.com/150" class="w-28 h-28 rounded-xl object-cover border-2 border-amber-400 shadow-md">
+                            <div class="space-y-1.5 text-xs">
+                                <h4 id="id-card-name" class="text-lg font-bold text-amber-300 leading-tight">মোঃ আব্দুল করিম</h4>
+                                <p><span class="text-blue-300">Member ID:</span> <span id="id-card-mid" class="font-mono font-bold">UAN-2026-001</span></p>
+                                <p><span class="text-blue-300">পদবি:</span> <span id="id-card-pos" class="font-bold text-white">ইউনিয়ন দলনেতা</span></p>
+                                <p><span class="text-blue-300">ইউনিয়ন:</span> তেঁতুলঝোড়া, সাভার, ঢাকা</p>
+                                <p><span class="text-blue-300">ইস্যুর তারিখ:</span> ২০ মে ২০২৬</p>
+                            </div>
+                        </div>
+
+                        <!-- Footer QR -->
+                        <div class="bg-blue-950/80 px-6 py-4 flex justify-between items-center border-t border-blue-800/60">
+                            <div class="text-[10px] text-slate-300">
+                                <p>Website: salmanfarshi1630.github.io</p>
+                                <p class="text-emerald-400 font-semibold mt-0.5"><i class="fa-solid fa-circle-check"></i> Verified Member Profile</p>
+                            </div>
+                            <div class="bg-white p-1 rounded">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=UAN-2026-001-DEMO" alt="QR Code" class="w-12 h-12">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. NOTICE BOARD TAB -->
+                <div id="tab-notice" class="space-y-6 hidden">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h2 class="text-xl font-bold">নোটিশ বোর্ড (Notice Board)</h2>
+                        <p class="text-xs text-slate-500">কেন্দ্রীয়, জেলা, উপজেলা ও ইউনিয়ন পর্যায়ের সকল প্রশাসনিক নোটিশ</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="px-3 py-1 text-xs font-bold bg-red-100 text-brandRed rounded-full">জেলা কার্যালয়</span>
+                                <span class="text-xs text-slate-400">প্রকাশের তারিখ: ০৫ মে ২০২৬</span>
+                            </div>
+                            <h3 class="text-lg font-bold">বার্ষিক সাধারণ আনসার সমাবেশ ও কুচকাওয়াজ ২০২৬ সম্পর্কিত জরুরি নির্দেশিকা।</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-300">আসন্ন বার্ষিক আনসার সমাবেশে তেঁতুলঝোড়া ইউনিয়ন হতে নির্বাচিত দলনেতা ও ভিডিপি সদস্যদের নির্ধারিত পোশাকে যথাসময়ে উপস্থিত থাকার জন্য নির্দেশ দেওয়া হলো।</p>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="px-3 py-1 text-xs font-bold bg-blue-100 text-navyBlue rounded-full">উপজেলা কার্যালয়</span>
+                                <span class="text-xs text-slate-400">প্রকাশের তারিখ: ০১ মে ২০২৬</span>
+                            </div>
+                            <h3 class="text-lg font-bold">ইউনিয়ন পর্যায়ে ভিডিপি মৌলিক প্রশিক্ষণার্থীদের তালিকা জমাদান প্রসঙ্গে।</h3>
+                            <p class="text-sm text-slate-600 dark:text-slate-300">সকল ইউনিয়ন দলনেতাদের আগামী ১০ মের মধ্যে নতুন প্রশিক্ষণার্থীদের তালিকা স্ব স্ব উপজেলা কার্যালয়ে জমা দেওয়ার জন্য বলা হলো।</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. COMPLAINT & SUPPORT TAB -->
+                <div id="tab-complaint" class="space-y-6 hidden">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h2 class="text-xl font-bold">অভিযোগ ও পরামর্শ (Complaint & Support)</h2>
+                        <p class="text-xs text-slate-500">আপনার যেকোনো দাপ্তরিক সমস্যা বা পরামর্শ এখানে জমা দিন</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <form onsubmit="handleComplaintSubmit(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">ধরন (Type)</label>
+                                    <select class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                                        <option>অভিযোগ (Complaint)</option>
+                                        <option>পরামর্শ (Suggestion)</option>
+                                        <option>প্রোফাইল সংশোধন আবেদন (Correction Request)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">বিষয় (Subject)</label>
+                                    <input type="text" required placeholder="সংক্ষিপ্ত বিষয়..." class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium mb-1">বিস্তারিত বিবরণ (Details)</label>
+                                <textarea rows="4" required placeholder="আপনার সমস্যা বা পরামর্শ বিস্তারিত লিখুন..." class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent text-sm"></textarea>
+                            </div>
+                            <button type="submit" class="px-6 py-2.5 bg-navyBlue hover:bg-blue-900 text-white font-semibold rounded-lg shadow text-sm">অভিযোগ জমা দিন</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 8. SETTINGS TAB -->
+                <div id="tab-settings" class="space-y-6 hidden">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                        <h2 class="text-xl font-bold">সেটিংস (Member Settings)</h2>
+                        <p class="text-xs text-slate-500">একাউন্ট ও সিস্টেম কনফিগারেশন</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+                        <div class="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-700">
+                            <div>
+                                <h4 class="font-semibold text-sm">ডার্ক মোড (Dark Mode)</h4>
+                                <p class="text-xs text-slate-500">আপনার পছন্দ অনুযায়ী থিম পরিবর্তন করুন</p>
+                            </div>
+                            <button onclick="toggleDarkMode()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-bold">টগল থিম</button>
+                        </div>
+                        <div class="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-700">
+                            <div>
+                                <h4 class="font-semibold text-sm">ভাষা পরিবর্তন (Language)</h4>
+                                <p class="text-xs text-slate-500">বাংলা অথবা ইংরেজি সিলেক্ট করুন</p>
+                            </div>
+                            <button onclick="toggleLanguage()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs font-bold" id="settings-lang-btn">English</button>
+                        </div>
+                        <div class="flex justify-between items-center py-3">
+                            <div>
+                                <h4 class="font-semibold text-sm text-brandRed">পাসওয়ার্ড রিসেট (Password Reset)</h4>
+                                <p class="text-xs text-slate-500">Supabase Auth এর মাধ্যমে পাসওয়ার্ড পরিবর্তন</p>
+                            </div>
+                            <button onclick="alert('ভবিষ্যতে Supabase Auth এর মাধ্যমে এই ফিচারটি কার্যকর হবে।')" class="px-4 py-2 bg-red-50 text-brandRed rounded-lg text-xs font-bold">রিসেট করুন</button>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-4 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
+                <p>UAVDMS — Union Ansar VDP Management System | Independent Experimental Prototype</p>
+                <p>Developed by <span class="font-bold text-navyBlue dark:text-blue-400">Salman Farshi</span> | Website: <a href="https://salmanfarshi1630.github.io/" target="_blank" class="text-brandRed underline">https://salmanfarshi1630.github.io/</a></p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Training Add Modal -->
+    <div id="training-modal" class="fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-700 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-lg">নতুন প্রশিক্ষণ যোগ করুন</h3>
+                <button onclick="closeTrainingModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="handleTrainingSubmit(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium mb-1">প্রশিক্ষণের নাম</label>
+                    <input type="text" id="tr-name" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent" placeholder="যেমন: ভিডিপি মৌলিক প্রশিক্ষণ">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">শুরুর তারিখ</label>
+                        <input type="date" id="tr-start" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">শেষ তারিখ</label>
+                        <input type="date" id="tr-end" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">প্রশিক্ষণ প্রদানকারী প্রতিষ্ঠান</label>
+                    <input type="text" id="tr-org" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent" placeholder="উপজেলা আনসার ভিডিপি কার্যালয়">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1">সার্টিফিকেট নম্বর</label>
+                    <input type="text" id="tr-cert" required class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-transparent" placeholder="CERT-XXXX">
+                </div>
+                <div class="flex justify-end space-x-2 pt-3">
+                    <button type="button" onclick="closeTrainingModal()" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-xs font-semibold">বাতিল</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-brandRed text-white text-xs font-semibold">সংরক্ষণ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Mock Member State
+        let currentMember = {
+            nameBn: "মোঃ আব্দুল করিম",
+            nameEn: "Md. Abdul Karim",
+            father: "মোঃ আমিন মিয়া ",
+            mother: "মোছাঃ আছিয়া বেগম",
+            spouse: "মোছাঃ রহিমা খাতুন",
+            dob: "1995-06-15",
+            blood: "B+",
+            phone: "01712345678",
+            email: "salmanfarshe@uavdms.org",
+            nid: "19951234567890123",
+            position: "ইউনিয়ন দলনেতা",
+            memberId: "UAN-2026-001",
+            union: "বাঁশগাড়ী ",
+            upazila: "রায়পুরা",
+            district: "নরসিংদী",
+            isLocked: true
+        };
+
+        // Initialize App on Load
+        window.onload = function() {
+            loadMemberDataToUI();
+        };
+
+        // Auth Tab Switch
+        function switchAuthTab(tab) {
+            if(tab === 'login') {
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('register-form').classList.add('hidden');
+                document.getElementById('tab-login-btn').className = "flex-1 py-2 font-semibold text-center border-b-2 border-brandRed text-brandRed";
+                document.getElementById('tab-reg-btn').className = "flex-1 py-2 font-semibold text-center text-slate-400 border-b-2 border-transparent";
+            } else {
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('register-form').classList.remove('hidden');
+                document.getElementById('tab-reg-btn').className = "flex-1 py-2 font-semibold text-center border-b-2 border-brandRed text-brandRed";
+                document.getElementById('tab-login-btn').className = "flex-1 py-2 font-semibold text-center text-slate-400 border-b-2 border-transparent";
+            }
+        }
+
+        function fillDemoLogin() {
+            document.getElementById('login-email').value = "abdul.karim@uavdms.org";
+            document.getElementById('login-pass').value = "123456";
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('auth-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            alert('সফলভাবে লগইন হয়েছে!');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            alert('সফলভাবে নিবন্ধন সম্পন্ন হয়েছে! এখন লগইন করুন।');
+            switchAuthTab('login');
+        }
+
+        function handleLogout() {
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('auth-container').classList.remove('hidden');
+        }
+
+        // Navigation Tabs
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'profile', 'training', 'directory', 'idcard', 'notice', 'complaint', 'settings'];
+            tabs.forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            // Close mobile sidebar if open
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        // Load Data to UI
+        function loadMemberDataToUI() {
+            document.getElementById('nav-user-name').innerText = currentMember.nameBn;
+            document.getElementById('nav-user-id').innerText = currentMember.memberId;
+            document.getElementById('dash-welcome-name').innerText = `স্বাগতম, ${currentMember.nameBn}`;
+            document.getElementById('dash-member-id').innerText = currentMember.memberId;
+            document.getElementById('dash-member-pos').innerText = currentMember.position;
+
+            // Profile Form
+            document.getElementById('prof-name-bn').value = currentMember.nameBn;
+            document.getElementById('prof-name-en').value = currentMember.nameEn;
+            document.getElementById('prof-father').value = currentMember.father;
+            document.getElementById('prof-mother').value = currentMember.mother;
+            document.getElementById('prof-spouse').value = currentMember.spouse;
+            document.getElementById('prof-dob').value = currentMember.dob;
+            document.getElementById('prof-blood').value = currentMember.blood;
+            document.getElementById('prof-phone').value = currentMember.phone;
+            document.getElementById('prof-email').value = currentMember.email;
+            document.getElementById('prof-nid').value = currentMember.nid;
+            document.getElementById('prof-position').value = currentMember.position;
+
+            // ID Card
+            document.getElementById('id-card-name').innerText = currentMember.nameBn;
+            document.getElementById('id-card-mid').innerText = currentMember.memberId;
+            document.getElementById('id-card-pos').innerText = currentMember.position;
+
+            // Lock state handling
+            if(currentMember.isLocked) {
+                document.querySelectorAll('.profile-input').forEach(el => el.disabled = true);
+                document.getElementById('profile-lock-badge').innerHTML = '<i class="fa-solid fa-lock"></i> Locked (Admin Controlled)';
+                document.getElementById('profile-lock-badge').className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700";
+                document.getElementById('profile-action-box').classList.add('hidden');
+            }
+        }
+
+        // Address Copy Checkbox
+        function copyAddress() {
+            // Placeholder logic for address replication
+        }
+
+        // Training Modal
+        function openTrainingModal() {
+            document.getElementById('training-modal').classList.remove('hidden');
+        }
+        function closeTrainingModal() {
+            document.getElementById('training-modal').classList.add('hidden');
+        }
+        function handleTrainingSubmit(e) {
+            e.preventDefault();
+            alert('নতুন প্রশিক্ষণ সফলভাবে যুক্ত হয়েছে এবং যাচাইয়ের জন্য Pending অবস্থায় আছে!');
+            closeTrainingModal();
+            document.getElementById('stat-total-training').innerText = '০৩';
+        }
+
+        // Complaint Submit
+        function handleComplaintSubmit(e) {
+            e.preventDefault();
+            alert('আপনার অভিযোগ/পরামর্শ সফলভাবে জমা হয়েছে! Tracking ID: TRK-92831');
+            e.target.reset();
+        }
+
+        // Directory Filter
+        function filterDirectory() {
+            let input = document.getElementById('dir-search').value.toLowerCase();
+            // Search implementation mock
+        }
+
+        // Theme & Language
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        let isBangla = true;
+        function toggleLanguage() {
+            isBangla = !isBangla;
+            document.getElementById('lang-btn').innerText = isBangla ? "English" : "বাংলা";
+            document.getElementById('settings-lang-btn').innerText = isBangla ? "English" : "বাংলা";
+        }
+    </script>
+</body>
+</html>
